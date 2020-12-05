@@ -137,12 +137,6 @@ class MarkdownBuilder implements md.NodeVisitor {
   String _currentBlockTag;
   bool _isInBlockquote = false;
 
-  /// The soft line break pattern is use to identify the spaces at the end of a
-  /// line of text and the leading spaces in the immediately following the line
-  /// of text. These spaces are removed in accordance with the Markdown
-  /// specification on soft line breaks when lines of text are joined.
-  final RegExp _softLineBreakPattern = RegExp(r" ?\n *");
-
   /// Returns widgets that display the given Markdown nodes.
   ///
   /// The returned widgets are typically used as children in a [ListView].
@@ -181,8 +175,7 @@ class MarkdownBuilder implements md.NodeVisitor {
       _addAnonymousBlockIfNeeded();
       if (_isListTag(tag)) {
         _listIndents.add(tag);
-        if (element.attributes["start"] != null)
-          start = int.parse(element.attributes["start"]) - 1;
+        if (element.attributes["start"] != null) start = int.parse(element.attributes["start"]) - 1;
       } else if (tag == 'blockquote') {
         _isInBlockquote = true;
       } else if (tag == 'table') {
@@ -219,9 +212,7 @@ class MarkdownBuilder implements md.NodeVisitor {
       // The Markdown parser passes empty table data tags for blank
       // table cells. Insert a text node with an empty string in this
       // case for the table cell to get properly created.
-      if (element.tag == 'td' &&
-          element.children != null &&
-          element.children.isEmpty) {
+      if (element.tag == 'td' && element.children != null && element.children.isEmpty) {
         element.children.add(md.Text(''));
       }
 
@@ -237,12 +228,8 @@ class MarkdownBuilder implements md.NodeVisitor {
 
   String extractTextFromElement(element) {
     return element is md.Element && (element.children?.isNotEmpty ?? false)
-        ? element.children
-            .map((e) => e is md.Text ? e.text : extractTextFromElement(e))
-            .join("")
-        : ((element.attributes?.isNotEmpty ?? false)
-            ? element.attributes["alt"]
-            : "");
+        ? element.children.map((e) => e is md.Text ? e.text : extractTextFromElement(e)).join("")
+        : ((element.attributes?.isNotEmpty ?? false) ? element.attributes["alt"] : "");
   }
 
   @override
@@ -254,8 +241,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
     Widget child;
     if (_blocks.isNotEmpty && builders.containsKey(_blocks.last.tag)) {
-      child = builders[_blocks.last.tag]
-          .visitText(text, styleSheet.styles[_blocks.last.tag]);
+      child = builders[_blocks.last.tag].visitText(text, styleSheet.styles[_blocks.last.tag]);
     } else if (_blocks.last.tag == 'pre') {
       child = Scrollbar(
         child: SingleChildScrollView(
@@ -267,12 +253,8 @@ class MarkdownBuilder implements md.NodeVisitor {
     } else {
       child = _buildRichText(
         TextSpan(
-          style: _isInBlockquote
-              ? _inlines.last.style.merge(styleSheet.blockquote)
-              : _inlines.last.style,
-          text: _isInBlockquote
-              ? text.text
-              : text.text.replaceAll(_softLineBreakPattern, " "),
+          style: _isInBlockquote ? _inlines.last.style.merge(styleSheet.blockquote) : _inlines.last.style,
+          text: _isInBlockquote ? text.text : text.text,
           recognizer: _linkHandlers.isNotEmpty ? _linkHandlers.last : null,
         ),
         textAlign: _textAlignForBlockTag(_currentBlockTag),
@@ -293,9 +275,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
       if (current.children.isNotEmpty) {
         child = Column(
-          crossAxisAlignment: fitContent
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.stretch,
+          crossAxisAlignment: fitContent ? CrossAxisAlignment.start : CrossAxisAlignment.stretch,
           children: current.children,
         );
       } else {
@@ -362,8 +342,7 @@ class MarkdownBuilder implements md.NodeVisitor {
       final _InlineElement parent = _inlines.last;
 
       if (builders.containsKey(tag)) {
-        final Widget child =
-            builders[tag].visitElementAfter(element, styleSheet.styles[tag]);
+        final Widget child = builders[tag].visitElementAfter(element, styleSheet.styles[tag]);
         if (child != null) current.children[0] = child;
       } else if (tag == 'img') {
         // create an image widget for this image
@@ -539,28 +518,22 @@ class MarkdownBuilder implements md.NodeVisitor {
   ) {
     List<Widget> mergedTexts = <Widget>[];
     for (Widget child in children) {
-      if (mergedTexts.isNotEmpty &&
-          mergedTexts.last is RichText &&
-          child is RichText) {
+      if (mergedTexts.isNotEmpty && mergedTexts.last is RichText && child is RichText) {
         RichText previous = mergedTexts.removeLast();
         TextSpan previousTextSpan = previous.text;
-        List<TextSpan> children = previousTextSpan.children != null
-            ? List.from(previousTextSpan.children)
-            : [previousTextSpan];
+        List<TextSpan> children =
+            previousTextSpan.children != null ? List.from(previousTextSpan.children) : [previousTextSpan];
         children.add(child.text);
         TextSpan mergedSpan = _mergeSimilarTextSpans(children);
         mergedTexts.add(_buildRichText(
           mergedSpan,
           textAlign: textAlign,
         ));
-      } else if (mergedTexts.isNotEmpty &&
-          mergedTexts.last is SelectableText &&
-          child is SelectableText) {
+      } else if (mergedTexts.isNotEmpty && mergedTexts.last is SelectableText && child is SelectableText) {
         SelectableText previous = mergedTexts.removeLast();
         TextSpan previousTextSpan = previous.textSpan;
-        List<TextSpan> children = previousTextSpan.children != null
-            ? List.from(previousTextSpan.children)
-            : [previousTextSpan];
+        List<TextSpan> children =
+            previousTextSpan.children != null ? List.from(previousTextSpan.children) : [previousTextSpan];
         children.add(child.textSpan);
         TextSpan mergedSpan = _mergeSimilarTextSpans(children);
         mergedTexts.add(
@@ -640,9 +613,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
     // When the mergered spans compress into a single TextSpan return just that
     // TextSpan, otherwise bundle the set of TextSpans under a single parent.
-    return mergedSpans.length == 1
-        ? mergedSpans.first
-        : TextSpan(children: mergedSpans);
+    return mergedSpans.length == 1 ? mergedSpans.first : TextSpan(children: mergedSpans);
   }
 
   Widget _buildRichText(TextSpan text, {TextAlign textAlign}) {
